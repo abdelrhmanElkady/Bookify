@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<Category>
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgery
 
 @{
     ViewData["Title"] = "Categories";
@@ -22,7 +23,8 @@
             Categories
         </h3>
         <div class="card-toolbar">
-            <a asp-controller="Categories" asp-action="Create" class="btn btn-sm btn-primary">
+            <a href="javascript:;" class="btn btn-sm btn-primary js-render-modal"
+                data-title="Add Category" data-url="/Categories/Create">
                 <i class="bi bi-plus-square-dotted"></i>
                 Add
             </a>
@@ -66,21 +68,7 @@
                     <tbody>
                         @foreach (var category in Model)
                         {
-                            <tr>
-                                <td>@category.Name</td>
-                                <td>
-                                    <span class="badge badge-light-@(category.IsDeleted ? "danger" : "success")">
-                                        @(category.IsDeleted ? "Deleted" : "Available")
-                                    </span>
-                                </td>
-                                <td>@category.CreatedOn</td>
-                                <td>@category.LastUpdatedOn</td>
-                                <td>
-                                    <a class="btn btn-sm btn-outline btn-outline-dashed btn-outline-primary btn-active-light-primary" asp-controller="Categories" asp-action="Edit" asp-route-id="@category.Id">
-                                        Edit
-                                    </a>
-                                </td>
-                            </tr>
+                            <partial name="_CategoryRow" model="@category" />
                         }
                     </tbody>
                 </table>
@@ -88,3 +76,54 @@
         }
     </div>
 </div>
+
+<input type="hidden" name="__RequestVerificationToken" value="@antiforgery.GetAndStoreTokens(Context).RequestToken" />
+
+@section Scripts
+    {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            $('body').delegate('.js-toggle-status', 'click', function () {
+                var btn = $(this);
+
+                bootbox.confirm({
+                    message: "Are you sure that you need to toggle this item status?",
+                    buttons: {
+                        confirm: {
+                            label: 'Yes',
+                            className: 'btn-danger'
+                        },
+                        cancel: {
+                            label: 'No',
+                            className: 'btn-secondary'
+                        }
+                    },
+                    callback: function (result) {
+                        if (result) {
+                            $.post({
+                                url: '/Categories/ToggleStatus/' + btn.data('id'),
+                                data: {
+                                    '__RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                                },
+                                success: function (lastUpdatedOn) {
+                                    var row = btn.parents('tr');
+                                    var status = row.find('.js-status');
+                                    var newStatus = status.text().trim() === 'Deleted' ? 'Available' : 'Deleted';
+                                    status.text(newStatus).toggleClass('badge-light-success badge-light-danger');
+                                    row.find('.js-updated-on').html(lastUpdatedOn);
+                                    row.addClass('animate__animated animate__flash');
+
+                                    showSuccessMessage();
+                                },
+                                error: function(){
+                                    showErrorMessage();
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}
