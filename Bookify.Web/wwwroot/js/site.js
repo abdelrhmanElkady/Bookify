@@ -42,7 +42,7 @@ function onModalSuccess(row) {
     datatable.row.add(newRow).draw();
 
     KTMenu.init();
-    KTMenu.initHandlers();
+    KTMenu.initGlobalHandlers();
 }
 
 function onModalComplete() {
