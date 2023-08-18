@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Linq.Dynamic.Core;
 
 namespace Bookify.Web.Controllers
 {
@@ -24,14 +25,64 @@ namespace Bookify.Web.Controllers
             return View();
         }
 
+        //for datatables server side
+        [HttpPost]
+        public IActionResult GetBooks()
+        {
+            var skip = int.Parse(Request.Form["start"]);
+            var pageSize = int.Parse(Request.Form["length"]);
+
+            var searchValue = Request.Form["search[value]"];
+
+            var sortColumnIndex = Request.Form["order[0][column]"];
+            var sortColumn = Request.Form[$"columns[{sortColumnIndex}][name]"];
+            var sortColumnDirection = Request.Form["order[0][dir]"];
+
+            IQueryable<Book> books = _context.Books
+                .Include(b => b.Author)
+                .Include(b => b.Categories)
+                .ThenInclude(c => c.Category);
+
+            if (!string.IsNullOrEmpty(searchValue))
+                books = books.Where(b => b.Title.Contains(searchValue) || b.Author!.Name.Contains(searchValue));
+
+            books = books.OrderBy($"{sortColumn} {sortColumnDirection}");
+
+            var data = books.Skip(skip).Take(pageSize).ToList();
+
+            var mappedData = _mapper.Map<IEnumerable<BookViewModel>>(data);
+
+            var recordsTotal = books.Count();
+
+            var jsonData = new { recordsFiltered = recordsTotal, recordsTotal, data = mappedData };
+
+            return Ok(jsonData);
+        }
+
+        public IActionResult Details(int id)
+        {
+            var book = _context.Books
+                .Include(b => b.Author)
+                .Include(b => b.Categories)
+                .ThenInclude(c => c.Category)
+                .SingleOrDefault(b => b.Id == id);
+
+            if (book is null)
+                return NotFound();
+
+            var viewModel = _mapper.Map<BookViewModel>(book);
+
+            return View(viewModel);
+        }
+
         public IActionResult Create()
         {
             return View("Form", PopulateViewModel());
         }
-
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(BookFormViewModel model)
+        public async Task<IActionResult> Create(BookFormViewModel model)
         {
             if (!ModelState.IsValid)
                 return View("Form", PopulateViewModel(model));
@@ -42,7 +93,7 @@ namespace Bookify.Web.Controllers
             {
                 var extension = Path.GetExtension(model.Image.FileName);
 
-                if (!_allowedExtensions.Contains(extension))
+                if (!_allowedExtensions.Contains(extension.ToLower()))
                 {
                     ModelState.AddModelError(nameof(model.Image), Errors.NotAllowedExtension);
                     return View("Form", PopulateViewModel(model));
@@ -59,7 +110,7 @@ namespace Bookify.Web.Controllers
                 var path = Path.Combine($"{_webHostEnvironment.WebRootPath}/images/books", imageName);
 
                 using var stream = System.IO.File.Create(path);
-                model.Image.CopyTo(stream);
+                await model.Image.CopyToAsync(stream);
 
                 book.ImageUrl = imageName;
             }
@@ -70,7 +121,7 @@ namespace Bookify.Web.Controllers
             _context.Add(book);
             _context.SaveChanges();
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Details), new {id=book.Id});
         }
 
         public IActionResult Edit(int id)
@@ -90,7 +141,7 @@ namespace Bookify.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(BookFormViewModel model)
+        public async Task<IActionResult> Edit(BookFormViewModel model)
         {
             if (!ModelState.IsValid)
                 return View("Form", PopulateViewModel(model));
@@ -112,7 +163,7 @@ namespace Bookify.Web.Controllers
 
                 var extension = Path.GetExtension(model.Image.FileName);
 
-                if (!_allowedExtensions.Contains(extension))
+                if (!_allowedExtensions.Contains(extension.ToLower()))
                 {
                     ModelState.AddModelError(nameof(model.Image), Errors.NotAllowedExtension);
                     return View("Form", PopulateViewModel(model));
@@ -129,12 +180,12 @@ namespace Bookify.Web.Controllers
                 var path = Path.Combine($"{_webHostEnvironment.WebRootPath}/images/books", imageName);
 
                 using var stream = System.IO.File.Create(path);
-                model.Image.CopyTo(stream);
+                await model.Image.CopyToAsync(stream);
 
                 model.ImageUrl = imageName;
             }
 
-            else if(model.Image is null && !string.IsNullOrEmpty(book.ImageUrl))
+            else if(!string.IsNullOrEmpty(book.ImageUrl))
                 model.ImageUrl = book.ImageUrl;
 
             book = _mapper.Map(model, book);
@@ -145,7 +196,24 @@ namespace Bookify.Web.Controllers
 
             _context.SaveChanges();
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Details), new { id = book.Id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ToggleStatus(int id)
+        {
+            var book = _context.Books.Find(id);
+
+            if (book is null)
+                return NotFound();
+
+            book.IsDeleted = !book.IsDeleted;
+            book.LastUpdatedOn = DateTime.Now;
+
+            _context.SaveChanges();
+
+            return Ok();
         }
 
         public IActionResult AllowItem(BookFormViewModel model)

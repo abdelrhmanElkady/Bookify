@@ -17,3 +17,14 @@ body {
   margin-bottom: 60px;
 }
 
+/* Start Custom Styles */
+
+.dt-spinner + div {
+    display: none !important;
+}
+
+.h-70px {
+    height: 70px !important;
+}
+
+/* End Custom Styles */
