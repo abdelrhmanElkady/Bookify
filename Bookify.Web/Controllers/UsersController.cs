@@ -1,9 +1,13 @@
 ﻿using Bookify.Web.Core.ViewModels;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text;
+using System.Text.Encodings.Web;
 
 namespace Bookify.Web.Controllers
 {
@@ -12,13 +16,18 @@ namespace Bookify.Web.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IEmailSender _emailSender;
         private readonly IMapper _mapper;
+        private readonly IEmailBodyBuilder _emailBodyBuilder;
 
-        public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IMapper mapper)
+
+        public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IMapper mapper, IEmailSender emailSender, IEmailBodyBuilder emailBodyBuilder)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _mapper = mapper;
+            _emailSender = emailSender;
+            _emailBodyBuilder = emailBodyBuilder;
         }
 
 
@@ -67,6 +76,24 @@ namespace Bookify.Web.Controllers
             if (result.Succeeded)
             {
                 await _userManager.AddToRolesAsync(user, model.SelectedRoles);
+
+                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                var callbackUrl = Url.Page(
+                    "/Account/ConfirmEmail",
+                    pageHandler: null,
+                    values: new { area = "Identity", userId = user.Id, code },
+                    protocol: Request.Scheme);
+
+                var body = _emailBodyBuilder.GetEmailBody(
+                        "https://res.cloudinary.com/devcreed/image/upload/v1668732314/icon-positive-vote-1_rdexez.svg",
+                        $"Hey {user.FullName}, thanks for joining us!",
+                        "please confirm your email",
+                        $"{HtmlEncoder.Default.Encode(callbackUrl!)}",
+                        "Active Account!"
+                    );
+
+                await _emailSender.SendEmailAsync(user.Email, "Confirm your email", body);
 
                 var viewModel = _mapper.Map<UserViewModel>(user);
                 return PartialView("_UserRow", viewModel);

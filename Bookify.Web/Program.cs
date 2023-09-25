@@ -8,6 +8,7 @@ using Bookify.Web.Data;
 using Bookify.Web.Helpers;
 using Bookify.Web.Services;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Bookify.Web.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,9 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddTransient<IEmailBodyBuilder, EmailBodyBuilder>();
 builder.Services.AddAutoMapper(Assembly.GetAssembly(typeof(MappingProfile)));
 builder.Services.AddExpressiveAnnotations();
+
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection(nameof(MailSettings)));
+
 
 var app = builder.Build();
 

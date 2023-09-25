@@ -22,14 +22,18 @@ namespace Bookify.Web.Areas.Identity.Pages.Account.Manage
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
 
+        private readonly IEmailBodyBuilder _emailBodyBuilder;
+
         public EmailModel(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IEmailBodyBuilder emailBodyBuilder)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
+            _emailBodyBuilder = emailBodyBuilder;
         }
 
         /// <summary>
@@ -124,10 +128,19 @@ namespace Bookify.Web.Areas.Identity.Pages.Account.Manage
                     pageHandler: null,
                     values: new { area = "Identity", userId = userId, email = Input.NewEmail, code = code },
                     protocol: Request.Scheme);
+
+                var body = _emailBodyBuilder.GetEmailBody(
+                "https://res.cloudinary.com/devcreed/image/upload/v1668732314/icon-positive-vote-1_rdexez.svg",
+                        $"Hey {user.FullName},",
+                        "please confirm your email",
+                        $"{HtmlEncoder.Default.Encode(callbackUrl!)}",
+                        "Confirm Email"
+                );
+
                 await _emailSender.SendEmailAsync(
                     Input.NewEmail,
                     "Confirm your email",
-                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    body);
 
                 StatusMessage = "Confirmation link to change email sent. Please check your email.";
                 return RedirectToPage();
@@ -160,10 +173,19 @@ namespace Bookify.Web.Areas.Identity.Pages.Account.Manage
                 pageHandler: null,
                 values: new { area = "Identity", userId = userId, code = code },
                 protocol: Request.Scheme);
+
+            var body = _emailBodyBuilder.GetEmailBody(
+                "https://res.cloudinary.com/devcreed/image/upload/v1668732314/icon-positive-vote-1_rdexez.svg",
+                        $"Hey {user.FullName},",
+                        "please confirm your email",
+                        $"{HtmlEncoder.Default.Encode(callbackUrl!)}",
+                        "Confirm Email"
+                );
+
             await _emailSender.SendEmailAsync(
                 email,
                 "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                body);
 
             StatusMessage = "Verification email sent. Please check your email.";
             return RedirectToPage();
