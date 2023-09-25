@@ -127,6 +127,7 @@ namespace Bookify.Web.Controllers
                     await _userManager.RemoveFromRolesAsync(user, currentRoles);
                     await _userManager.AddToRolesAsync(user, model.SelectedRoles);
                 }
+                await _userManager.UpdateSecurityStampAsync(user);
 
                 var viewModel = _mapper.Map<UserViewModel>(user);
                 return PartialView("_UserRow", viewModel);
@@ -198,6 +199,9 @@ namespace Bookify.Web.Controllers
             user.LastUpdatedOn = DateTime.Now;
 
             await _userManager.UpdateAsync(user);
+
+            if(user.IsDeleted)
+                await _userManager.UpdateSecurityStampAsync(user);
 
             return Ok(user.LastUpdatedOn.ToString());
         }

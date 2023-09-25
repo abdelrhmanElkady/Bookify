@@ -22,7 +22,8 @@
 						<span class="menu-title">Home</span>
 					</a>
 					<!--end:Menu link-->
-					<!--begin:Menu link-->
+					@if(User.IsInRole(AppRoles.Archive)){
+						<!--begin:Menu link-->
 					<a class="menu-link" asp-controller="Categories" asp-action="Index" active-when="Categories">
 						<span class="menu-icon">
 							<!--begin::Svg Icon | path: icons/duotune/general/gen002.svg-->
@@ -64,7 +65,10 @@
                         <span class="menu-title">Books</span>
                     </a>
                     <!--end:Menu link-->
-					<!--begin:Menu link-->
+					}
+					@if (User.IsInRole(AppRoles.Admin))
+					{
+						<!--begin:Menu link-->
                     <a class="menu-link" asp-controller="Users" asp-action="Index" active-when="Users">
                         <span class="menu-icon">
                             <!--begin::Svg Icon | path: icons/duotune/general/gen002.svg-->
@@ -80,6 +84,7 @@
                         <span class="menu-title">Users</span>
                     </a>
                     <!--end:Menu link-->
+					}
 				</div>
 				<!--end:Menu item-->
 			</div>
