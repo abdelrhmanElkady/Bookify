@@ -1,8 +1,113 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model HomeViewModel
+
+@{
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!--begin::Toolbar-->
+<div class="toolbar mb-5 mb-lg-7" id="kt_toolbar">
+	<!--begin::Page title-->
+	<div class="page-title d-flex flex-column me-3">
+		<!--begin::Title-->
+		<h1 class="d-flex text-dark fw-bold my-1 fs-3">Dashboard</h1>
+		<!--end::Title-->
+	</div>
+	<!--end::Page title-->
 </div>
+<!--end::Toolbar-->
+<!--begin::Row-->
+<div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+	<!--begin::Col-->
+	<div class="col">
+		<!--begin::Engage widget 6-->
+		<div class="card flex-grow-1 bgi-no-repeat bgi-size-contain bgi-position-x-end h-xl-100" style="background-color:#020202;background-image:url('/assets/images/books-bg.webp'); background-size: cover;">
+			<!--begin::Body-->
+			<div class="card-body d-flex justify-content-between flex-column ps-xl-18">
+				<!--begin::Heading-->
+				<div class="mb-20 p-8 w-fit-content glass">
+					<!--begin::Title-->
+					<h3 class="fw-bold text-white fs-5x mb-5 ms-n1 custom-header">Bookify</h3>
+					<!--end::Title-->
+					<!--begin::Description-->
+					<span class="fw-bold text-white fs-4 mb-8 d-block lh-0">Books are the best friends you’ll ever meet</span>
+					<!--end::Description-->
+					<!--begin::Items-->
+					<div class="d-flex align-items-center">
+						<!--begin::Item-->
+						<div class="d-flex align-items-center me-6">
+							<!--begin::Icon-->
+							<i class="las la-book-reader fs-3 text-white me-2"></i>
+							<!--end::Icon-->
+							<!--begin::Info-->
+							<span class="fw-semibold text-white fs-6">@Model.numberOfBooks+ books</span>
+							<!--end::Info-->
+						</div>
+						<!--end::Item-->
+					</div>
+					<!--end::Items-->
+				</div>
+				<!--end::Heading-->
+			</div>
+			<!--end::Body-->
+		</div>
+		<!--end::Engage widget 6-->
+	</div>
+	<!--end::Col-->
+</div>
+<!--end::Row-->
+<!--begin::Row-->
+<div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+	<!--begin::Col-->
+	<div >
+		<!--begin::Player widget 1-->
+		<div class="card card-flush h-xl-100">
+			<!--begin::Header-->
+			<div class="card-header pt-7">
+				<!--begin::Title-->
+				<h3 class="card-title align-items-start flex-column">
+					<span class="card-label fw-bold text-dark">Recently Added Books</span>
+				</h3>
+				<!--end::Title-->
+			</div>
+			<!--end::Header-->
+			<!--begin::Card body-->
+			<div class="card-body pt-7">
+				<!--begin::Row-->
+				<div class="row g-5 g-xl-9 mb-5 mb-xl-9">
+					@foreach (var book in Model.LastAddedBooks)
+					{
+						<!--begin::Col-->
+						<div class="col-sm-3 mb-3 mb-sm-0">
+							<!--begin::Player card-->
+							<div class="m-0">
+								<!--begin::User pic-->
+								<div class="card-rounded position-relative mb-5">
+									<!--begin::Img-->
+									<div class="bgi-position-center bgi-no-repeat bgi-size-cover h-200px card-rounded" style="background-image:url('/images/books/@book.ImageUrl')"></div>
+									<!--end::Img-->
+								</div>
+								<!--end::User pic-->
+								<!--begin::Info-->
+								<div class="m-0">
+									<!--begin::Title-->
+									<a asp-controller="Books" asp-action="Details" asp-route-id="@book.Id"  class="text-gray-800 text-hover-primary fs-3 fw-bold d-block mb-2">@book.Title</a>
+									<!--end::Title-->
+									<span class="fw-bold fs-6 text-gray-400 d-block lh-1">@book.Author</span>
+								</div>
+								<!--end::Info-->
+							</div>
+							<!--end::Player card-->
+						</div>
+						<!--end::Col-->
+					}
+				</div>
+			</div>
+			<!--end::Card body-->
+		</div>
+		<!--end::Player widget 1-->
+	</div>
+	<!--end::Col-->
+	
+</div>
+<!--end::Row-->
+

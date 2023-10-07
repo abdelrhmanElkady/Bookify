@@ -5,15 +5,33 @@ namespace Bookify.Web.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, IMapper mapper)
         {
             _logger = logger;
+            _context = context;
+            _mapper = mapper;
         }
 
         public IActionResult Index()
         {
-            return View();
+            var numberOfBooks = _context.Books.Count(c => !c.IsDeleted);
+            var lastAddedBooks = _context.Books
+                                .Include(b => b.Author)
+                                .Where(b => !b.IsDeleted)
+                                .OrderByDescending(b => b.Id)
+                                .Take(12)
+                                .ToList();
+            var viewModel = new HomeViewModel
+            {
+                numberOfBooks = numberOfBooks,
+                LastAddedBooks = _mapper.Map<IEnumerable<BookViewModel>>(lastAddedBooks)
+               
+            };
+
+            return View(viewModel);
         }
 
         public IActionResult Privacy()

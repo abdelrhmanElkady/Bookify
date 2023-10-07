@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-
+﻿
 namespace Bookify.Web.Seeds
 {
     public static class DefaultUsers
@@ -20,6 +19,8 @@ namespace Bookify.Web.Seeds
             {
                 await userManager.CreateAsync(admin, "P@ssword123");
                 await userManager.AddToRoleAsync(admin, AppRoles.Admin);
+                await userManager.AddToRoleAsync(admin, AppRoles.Archive);
+                await userManager.AddToRoleAsync(admin, AppRoles.Reception);
             }
         }
     }

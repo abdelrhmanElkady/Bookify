@@ -22,7 +22,7 @@
 						<span class="menu-title">Home</span>
 					</a>
 					<!--end:Menu link-->
-					@if(User.IsInRole(AppRoles.Archive)){
+					@if(User.IsInRole(AppRoles.Archive) || User.IsInRole(AppRoles.Admin)){
 						<!--begin:Menu link-->
 					<a class="menu-link" asp-controller="Categories" asp-action="Index" active-when="Categories">
 						<span class="menu-icon">
